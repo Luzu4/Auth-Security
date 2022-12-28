@@ -8,9 +8,10 @@ const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const findOrCreate = require("mongoose-findorcreate");
+const path = require("path");
 
-app.use(express.static("public"));
-app.set('view engine', 'ejs');
+app.use(express.static(path.join(__dirname + '/public')));
+app.set('views', __dirname + '/views');
 app.use(express.urlencoded({
     extended: true
 }));
@@ -25,13 +26,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 mongoose.set('strictQuery', false);
-mongoose.connect("mongodb://localhost:27017/userDB", {useNewUrlParser: true});
+mongoose.connect("mongodb+srv://luz:" + process.env.DB_PASSWORD + "@cluster0.zwcnyqt.mongodb.net/secretDB?retryWrites=true&w=majority", {useNewUrlParser: true});
 
 
 const userSchema = new mongoose.Schema({
     username: String,
     password: String,
-    googleId: String
+    googleId: String,
+    secret: String
 });
 
 
@@ -108,11 +110,14 @@ app.post("/login", function (req, res) {
 
 
 app.get("/secrets", function (req, res) {
-    if (req.isAuthenticated()) {
-        res.render("secrets");
-    } else {
-        res.redirect("/login");
-    }
+    User.find({"secret":{$ne:null}},function(err,foundUsers){
+        if(!err){
+            res.render("secrets",{users:foundUsers});
+        }else{
+            console.log(err);
+        }
+    })
+
 })
 
 app.get("/register", function (req, res) {
@@ -133,6 +138,25 @@ app.post("/register", function (req, res) {
 
 })
 
+app.get("/submit",function (req,res){
+    if(req.isAuthenticated()){
+        res.render("submit");
+    }else{
+        res.redirect("/login");
+    }
+})
+
+app.post("/submit",function (req,res){
+    User.findById(req.user.id,function(err, foundUser){
+        if(err){
+            console.log(err);
+        }else{
+            foundUser.secret= req.body.secret;
+            foundUser.save();
+            res.redirect("/secrets");
+        }
+    })
+})
 
 app.listen(PORT, function () {
     console.log("Server Started on port " + PORT);
