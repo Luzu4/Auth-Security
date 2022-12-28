@@ -66,6 +66,14 @@ passport.use(new GoogleStrategy({
     }
 ));
 
+app.use(function(req, res, next){
+    // all the stuff from the example
+    if (req.isAuthenticated()){
+        res.locals.user = req.user;
+    }
+    next();
+});
+
 app.get("/", function (req, res) {
     res.render("home");
 });
@@ -113,6 +121,7 @@ app.post("/login", function (req, res) {
 app.get("/secrets", function (req, res) {
     User.find({"secret":{$ne:null}},function(err,foundUsers){
         if(!err){
+
             res.render("secrets",{users:foundUsers});
         }else{
             console.log(err);
