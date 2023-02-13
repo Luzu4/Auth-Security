@@ -1,4 +1,4 @@
-# Workshop-Auth-Security
-Web-Dev-Bootcamp-Udemy - Learning Auth
+# Auth-Security
+Learning Auth
 
 https://secrets-nu.vercel.app/secrets
